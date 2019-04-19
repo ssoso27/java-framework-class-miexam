@@ -1,21 +1,14 @@
 package kr.ac.jejunu.userdao;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class UserDao {
-    private JdbcTemplate jdbcTemplate;
+    private JejuJdbcTemplate jejuJdbcTemplate;
 
-    public UserDao(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public UserDao(JejuJdbcTemplate jejuJdbcTemplate) {
+        this.jejuJdbcTemplate = jejuJdbcTemplate;
     }
 
     public User get(Long id) throws SQLException {
@@ -24,7 +17,7 @@ public class UserDao {
         User result = null;
 
         try {
-            result = jdbcTemplate.queryForObject(sql, params, (rs, rowNum) -> {
+            result = jejuJdbcTemplate.queryForObject(sql, params, (rs, rowNum) -> {
                User user = new User();
                user.setId(rs.getLong("id"));
                user.setName(rs.getString("name"));
@@ -40,34 +33,21 @@ public class UserDao {
     public Long add(User user) throws SQLException {
         String sql = "INSERT INTO userinfo(name, password) VALUES (?, ?);";
         Object[] params = new Object[]{user.getName(), user.getPassword()};
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(new PreparedStatementCreator() {
-            @Override
-            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-                PreparedStatement preparedStatement = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                for (int i = 0; i < params.length; i++) {
-                    preparedStatement.setObject(i+1, params[i]);
-                }
-                return preparedStatement;
-            }
-        }, keyHolder);
-
-        return keyHolder.getKey().longValue();
+        return jejuJdbcTemplate.insert(sql, params);
     }
 
     public void update(User user) throws SQLException {
         String sql = "UPDATE userinfo SET name=?, password=? WHERE id=?;";
         Object[] params = new Object[]{user.getName(), user.getPassword(), user.getId()};
 
-        jdbcTemplate.update(sql, params);
+        jejuJdbcTemplate.update(sql, params);
     }
 
     public void delete(Long id) throws SQLException {
         String sql = "DELETE FROM userinfo WHERE id=?;";
         Object[] params = new Object[]{id};
 
-        jdbcTemplate.update(sql, params);
+        jejuJdbcTemplate.update(sql, params);
     }
 
 }
